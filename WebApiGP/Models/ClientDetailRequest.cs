@@ -7,6 +7,7 @@ namespace WebApiGP.Models
 {
     public class ClientDetailRequest
     { 
+        //public long idClientDetail { get; set; }
         public string  firstName { get; set; }
         public string lastName { get; set; }
         public string birthDay { get; set; }

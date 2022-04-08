@@ -17,6 +17,8 @@ namespace WebApiGP.Data
         public string pass { get; set; } 
         [Required]
         public string author { get; set; }
+        [Required]
+        public long codeGiaPha { get; set; }
         //public virtual ICollection<Admin> Admins { get; set; }
         //public virtual ICollection<ManagerIDGiaPha> ManagerIDGiaPhas { get; set; }
     }

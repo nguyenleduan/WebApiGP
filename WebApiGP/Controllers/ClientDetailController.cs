@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,13 +13,7 @@ namespace WebApiGP.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class ClientDetailController : ControllerBase
-    {
-        //private readonly MyDbContext _dbContext;
-
-        //public ClientDetailController(MyDbContext dbContext)
-        //{
-        //    this._dbContext = dbContext;
-        //} 
+    { 
 
         [HttpGet("GetAllClientDetail")]
         public IActionResult GetAllClientDetail()
@@ -33,11 +28,11 @@ namespace WebApiGP.Controllers
                         return Ok(Result.Failure("Data empty"));
                     } 
                     return Ok(Result.Success(clientDetails));
-                } 
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Error get all client detail");
+                return Ok(Result.Failure(ex.ToString()));
             }
         }
         [HttpGet("SearchClientDetail/{id}")]
@@ -53,11 +48,11 @@ namespace WebApiGP.Controllers
                         return Ok(Result.Failure("Data empty"));
                     }  
                     return Ok(Result.Success(clientDetails));
-                } 
+                }
             }
-            catch (Exception)
-            { 
-                return Ok(Result.Failure("Error get all client detail"));
+            catch (Exception ex)
+            {
+                return Ok(Result.Failure(ex.ToString()));
             }
         } 
 
@@ -94,15 +89,78 @@ namespace WebApiGP.Controllers
 
             return Ok(Result.Success(1));
         }
-        [HttpPut("UpdateClientDetail")]
-        public IActionResult UpdateClientDetail()
+        [HttpPut("UpdateClientDetail/{id}")]
+        public IActionResult UpdateClientDetail([FromBody] ClientDetailRequest request, long id)
         {
-            return Ok();
+
+            try
+            {
+                using (var db = new MyDbContext())
+                {
+                    var client = db.ClientDetail.FirstOrDefault(u => u.idClientDetail == id);
+                    if (client == null)
+                    {
+                        return Ok(Result.Failure("Data in data base empty"));
+                    }  
+                     if (request.idFamily == null)
+                    {
+                        return Ok(Result.Failure("idFamily cannot be empty"));
+                    }
+                    else if (request.status == null)
+                    {
+                        return Ok(Result.Failure("status cannot be empty"));
+                    }
+                    else if (string.IsNullOrEmpty(request.firstName))
+                    {
+                        return Ok(Result.Failure("firstName cannot be empty"));
+                    }
+                    else if (string.IsNullOrEmpty(request.lastName))
+                    {
+                        return Ok(Result.Failure("lastName cannot be empty"));
+                    } 
+                    client.idFamily = request.idFamily;
+                    client.idGiaPhaChild = request.idGiaPhaChild;
+                    client.idLocationDied = request.idLocationDied;
+                    client.firstName = request.firstName;
+                    client.lastName = request.lastName;
+                    client.birthDay = request.birthDay;
+                    client.diedDay = request.diedDay;
+                    client.status = request.status;
+                    client.phone = request.phone;
+                    client.avatar = request.avatar;
+                    client.idLocationHome = request.idLocationHome;
+                    db.Entry(client).State = EntityState.Modified;
+                    db.SaveChanges();
+                    return Ok(Result.Success(1));
+                }
+            }
+            catch (Exception ex)
+            {
+                return Ok(Result.Failure(ex.ToString()));
+            }
         }
         [HttpDelete("DeleteClientDetail/{id}")]
-        public IActionResult DeleteClientDetail(long Id)
+        public IActionResult DeleteClientDetail(long id)
         {
-            return Ok();
+
+            try
+            {
+                using (var db = new MyDbContext())
+                {
+                    var client = db.ClientDetail.FirstOrDefault(u => u.idClientDetail == id);
+                    if (client == null)
+                    {
+                        return Ok(Result.Failure("Client Not found"));
+                    }
+                    db.Entry(client).State = EntityState.Deleted;
+                    db.SaveChanges();
+                    return Ok(Result.Success(1));
+                }
+            }
+            catch (Exception ex)
+            {
+                return Ok(Result.Failure(ex.ToString()));
+            }
         }
     }
 }

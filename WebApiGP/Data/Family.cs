@@ -14,10 +14,11 @@ namespace WebApiGP.Data
         [Key]
         [Required]
         public long idFamily { get; set; }
+        [Required]
         public long bigIdFamily { get; set; }
         [Required]
         public long idGiaPha { get; set; } 
-        public long idLocationHome { get; set; }  
+        public long? idLocationHome { get; set; }  
 
 
         //asd
