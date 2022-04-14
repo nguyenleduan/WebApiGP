@@ -24,31 +24,31 @@ namespace WebApiGP.Controllers
             public IFormFile files { get; set; }
         }
         [HttpPost]
-        public async Task<string> Post(FileUploadApi objFile)
+        public async Task<IActionResult> Post(IFormFile file) 
         {
             try
             { 
-                if (objFile.files.Length > 0)
+                if (file != null)
                 {
                     if (!Directory.Exists(_environment.WebRootPath + "\\UpLoad\\"))
                     {
                         Directory.CreateDirectory(_environment.WebRootPath + "\\UpLoad\\");
                     }
-                    using (FileStream fileStream = System.IO.File.Create(_environment.WebRootPath + "\\UpLoad\\" + objFile.files.FileName))
+                    using (FileStream fileStream = System.IO.File.Create(_environment.WebRootPath + "\\UpLoad\\" + file.FileName))
                     {
-                        objFile.files.CopyTo(fileStream);
+                        file.CopyTo(fileStream);
                         fileStream.Flush();
-                        return "\\UpLoad\\" + objFile.files.FileName;
+                        return Ok(Result.Success("\\UpLoad\\" + file.FileName));
                     }
                 }
                 else
                 {
-                    return "fail";
+                    return Ok(Result.Failure("File Null"));
                 }
             }
             catch (Exception ex)
             {
-                return ex.ToString();
+                return Ok(Result.Failure(ex.ToString())); 
             }
         }
     }

@@ -13,7 +13,7 @@ namespace WebApiGP.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class ClientDetailController : ControllerBase
-    { 
+    {  
 
         [HttpGet("GetAllClientDetail")]
         public IActionResult GetAllClientDetail()
