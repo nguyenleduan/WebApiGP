@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Service.Service.ClientDetails;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +11,17 @@ using WebApiGP.Models;
 
 namespace WebApiGP.Controllers
 {
-    [Route("api/[controller]")]
+
+     [Route("api/[controller]")]
     [ApiController]
     public class ClientDetailController : ControllerBase
-    {  
+    {
+
+        IClientDetailService _IClientDetailService;
+        public ClientDetailController(IClientDetailService iClientDetailService)
+        {
+            _IClientDetailService = iClientDetailService;
+        }
 
         [HttpGet("GetAllClientDetail")]
         public IActionResult GetAllClientDetail()
@@ -35,20 +43,43 @@ namespace WebApiGP.Controllers
                 return Ok(Result.Failure(ex.ToString()));
             }
         }
-        [HttpGet("SearchClientDetail/{id}")]
-        public IActionResult SearchClientDetail(long id)
+        [HttpGet("GetClientDetail/{idClienDetail}")]
+        public async Task<IActionResult> GetClientDetailAsync(long idClienDetail)
         {
             try
-            { 
-                using (var db = new MyDbContext())
+            {
+                if (idClienDetail == null)
                 {
-                    var clientDetails = db.ClientDetail.FirstOrDefault(u => u.idClientDetail == id); 
-                    if (clientDetails==null)
-                    {
-                        return Ok(Result.Failure("Data empty"));
-                    }  
-                    return Ok(Result.Success(clientDetails));
+                    return Ok(Result.Failure("idClienDetail not null"));
                 }
+                var result = await _IClientDetailService.GetClientDetail(idClienDetail);
+                if (result.Succeeded)
+                {
+                    return Ok(Result.Success(result.Data));
+                }
+                return Ok(Result.Failure("Not found"));
+            }
+            catch (Exception ex)
+            {
+                return Ok(Result.Failure(ex.ToString()));
+            }
+        }   
+        
+        [HttpGet("GetAllClientDetailOfFamily/{idFamily}")]
+        public async Task<IActionResult> GetAllClientDetailOfFamily(long idFamily)
+        {
+            try
+            {
+                if(idFamily == null)
+                { 
+                    return Ok(Result.Failure("idFamily not null"));
+                }
+                var result = await _IClientDetailService.GetAllClientDetailOfFamily(idFamily);
+                if (result.Succeeded)
+                {
+                    return Ok(Result.Success(result.Data));
+                }
+                return Ok(Result.Failure("Not found"));
             }
             catch (Exception ex)
             {
@@ -58,47 +89,41 @@ namespace WebApiGP.Controllers
 
 
         [HttpPost("CreateClienDetail")]
-        public IActionResult CraeateClientDetail([FromBody] ClientDetailRequest request)
+        public async Task<IActionResult> CraeateClientDetail([FromBody] ClientDetailRequest request)
         {
 
             try
             {
-                ClientDetail client = new ClientDetail();
-                client.idFamily = request.idFamily;
-                client.idGiaPhaChild = request.idGiaPhaChild;
-                client.idLocationDied = request.idLocationDied;
-                client.firstName = request.firstName;
-                client.lastName = request.lastName;
-                client.birthDay = request.birthDay;
-                client.diedDay = request.diedDay;
-                client.status = request.status;
-                client.phone = request.phone;
-                client.avatar = request.avatar;
-                client.idLocationHome = request.idLocationHome;
-
-                using (var db = new MyDbContext())
-                {
-                    db.ClientDetail.Add(client);
-                    db.SaveChanges();
+                if(string.IsNullOrEmpty(request.firstName) || string.IsNullOrEmpty(request.lastName) )
+                { 
+                    return Ok(Result.Failure("Name cannot be empty or null"));
                 }
-
+                if(request.status == null)
+                { 
+                    return Ok(Result.Failure("status cannot be null"));
+                }
+                if(request.idFamily == null)
+                { 
+                    return Ok(Result.Failure("idFamily cannot be null"));
+                } 
+                var result = await _IClientDetailService.CreateClientDetail(request);
+                if (result )
+                {
+                    return Ok(Result.Success(1));
+                }
+                return Ok(Result.Failure("Create fail")); 
             } catch (Exception ex)
             {
                 return Ok(Result.Failure(ex.ToString())); 
             }
-
-            return Ok(Result.Success(1));
+             
         }
-        [HttpPut("UpdateClientDetail/{id}")]
-        public IActionResult UpdateClientDetail([FromBody] ClientDetailRequest request, long id)
-        {
-
+        [HttpPut("UpdateClientDetail/{idClientDetail}")]
+        public async Task<IActionResult> UpdateClientDetailAsync([FromBody] ClientDetailRequest request, long idClientDetail)
+        { 
             try
-            {
-                using (var db = new MyDbContext())
-                {
-                    var client = db.ClientDetail.FirstOrDefault(u => u.idClientDetail == id);
-                    if (client == null)
+            { 
+                    if (request == null)
                     {
                         return Ok(Result.Failure("Data in data base empty"));
                     }  
@@ -117,45 +142,30 @@ namespace WebApiGP.Controllers
                     else if (string.IsNullOrEmpty(request.lastName))
                     {
                         return Ok(Result.Failure("lastName cannot be empty"));
-                    } 
-                    client.idFamily = request.idFamily;
-                    client.idGiaPhaChild = request.idGiaPhaChild;
-                    client.idLocationDied = request.idLocationDied;
-                    client.firstName = request.firstName;
-                    client.lastName = request.lastName;
-                    client.birthDay = request.birthDay;
-                    client.diedDay = request.diedDay;
-                    client.status = request.status;
-                    client.phone = request.phone;
-                    client.avatar = request.avatar;
-                    client.idLocationHome = request.idLocationHome;
-                    db.Entry(client).State = EntityState.Modified;
-                    db.SaveChanges();
+                }
+                var result = await _IClientDetailService.UpdateClientDetail(request, idClientDetail);
+                if (result)
+                {
                     return Ok(Result.Success(1));
                 }
+                return Ok(Result.Failure("Create fail"));
             }
             catch (Exception ex)
             {
                 return Ok(Result.Failure(ex.ToString()));
             }
         }
-        [HttpDelete("DeleteClientDetail/{id}")]
-        public IActionResult DeleteClientDetail(long id)
+        [HttpDelete("DeleteClientDetail/{idClientDetail}")]
+        public async Task<IActionResult> DeleteClientDetailAsync(long idClientDetail)
         {
-
             try
             {
-                using (var db = new MyDbContext())
+                var result = await _IClientDetailService.DeleteClientDetail(idClientDetail);
+                if (result)
                 {
-                    var client = db.ClientDetail.FirstOrDefault(u => u.idClientDetail == id);
-                    if (client == null)
-                    {
-                        return Ok(Result.Failure("Client Not found"));
-                    }
-                    db.Entry(client).State = EntityState.Deleted;
-                    db.SaveChanges();
                     return Ok(Result.Success(1));
                 }
+                return Ok(Result.Failure("Create fail"));
             }
             catch (Exception ex)
             {

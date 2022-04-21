@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore; 
+using Service.Service.AdminFamilys;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,20 +13,26 @@ namespace WebApiGP.Controllers
 {
     public class AdminFamilyController : Controller
     {
-        [HttpGet("GetAllAdminOfFamily/{idGiaPha}")]
-        public IActionResult GetAllAdminOfFamily(long idGiaPha)
+
+        private IAdminFamilyService _IAdminFamilyService;
+
+
+        public AdminFamilyController(IAdminFamilyService iAdminFamilyService)
         {
+            _IAdminFamilyService = iAdminFamilyService;
+        }
+
+        [HttpGet("GetAllAdminOfFamily/{idGiaPha}")]
+        public async Task<IActionResult> GetAllAdminOfFamily(long idGiaPha)
+        { 
             try
-            {
-                using (var db = new MyDbContext())
+            { 
+                var result = await _IAdminFamilyService.GetAllAdminOfFamily(idGiaPha);
+                if (result.Succeeded == false )
                 {
-                    var gp = db.AdminFamily.FromSqlInterpolated($"EXECUTE [dbo].[getAllAdminOfgFamilyGiaPha] @idGiaPha={idGiaPha}").ToList();
-                    if (!gp.Any())
-                    {
-                        return Ok(Result.Failure("Data empty"));
-                    }
-                    return Ok(Result.Success(gp));
+                    return BadRequest(result);
                 }
+                return Ok(Result.Success(result.Data));
             }
             catch (Exception ex)
             {
@@ -34,58 +41,38 @@ namespace WebApiGP.Controllers
         }
 
         [HttpPost("CreateAdminOfFamily")]
-        public IActionResult CreateAdminOfFamily([FromBody] AdminFamilyRequest request)
+        public async Task<IActionResult> CreateAdminOfFamily([FromBody] AdminFamilyRequest request)
         {
-
             try
             {
-                if (request.idFamily == null)
+                var result = await _IAdminFamilyService.CreateAdminfamily(request);
+                if (result.Succeeded == false)
                 {
-                    return Ok(Result.Failure("idFamily not null"));
+                    return BadRequest(result);
                 }
-                if (request.idGiaPha == null)
+                return Ok(Result.Success(result.Data));
+            }
+            catch (Exception ex)
+            {
+                return Ok(Result.Failure(ex.ToString()));
+            }   
+        }
+        [HttpDelete("DeleteIdAdminOfFamily/{idAdmin}")]
+        public async Task<IActionResult> DeleteIdAdminOfFamily(long idAdmin)
+        {
+            try
+            {
+                var result = await _IAdminFamilyService.DeleteAdminOfFamily(idAdmin);
+                if (result.Succeeded == false)
                 {
-                    return Ok(Result.Failure("idGiaPha not null"));
+                    return BadRequest(result);
                 }
-                if (string.IsNullOrEmpty(request.phone))
-                {
-                    return Ok(Result.Failure("phone not empty or null"));
-                }
-                AdminFamily gp = new AdminFamily();
-                gp.idGiaPha = (long)request.idGiaPha;
-                gp.phone = request.phone;
-                gp.idFamily = request.idFamily;
-                using (var db = new MyDbContext())
-                {
-                    db.AdminFamily.Add(gp);
-                    db.SaveChanges();
-                }
-
+                return Ok(Result.Success(result.Data));
             }
             catch (Exception ex)
             {
                 return Ok(Result.Failure(ex.ToString()));
             }
-
-            return Ok(Result.Success(1));
-        }
-        [HttpDelete("DeleteIdAdminOfFamily/{idAdmin}")]
-        public IActionResult DeleteIdAdminOfFamily(long idAdmin)
-        {
-
-            try
-            {
-                using (var db = new MyDbContext())
-                {
-                    db.AdminFamily.FromSqlInterpolated($"EXECUTE [dbo].[deleteAdminOfFamily] @idAdminFamily={idAdmin}").ToList();
-                }
-            }
-            catch (Exception  )
-            { 
-
-            }
-
-            return Ok(Result.Success(1));
         }
     }
 }

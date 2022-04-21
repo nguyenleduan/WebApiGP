@@ -35,9 +35,30 @@ namespace WebApiGP.Models
             return new Result(true, data);
         }
 
+        public static Result Success(object data, string messageSuccess)
+        {
+            var respone = new Result(true, data);
+            respone.Error = messageSuccess;
+
+            return respone;
+        }
+
         public static Result Failure(string error = "")
         {
             return new Result(false, error);
+        }
+
+        public static Result Failure(object data)
+        {
+            return new Result(false, data);
+        }
+
+        public static Result Failure(object data, string messageError)
+        {
+            var respone = new Result(false, data);
+            respone.Error = messageError;
+
+            return respone;
         }
     }
 }

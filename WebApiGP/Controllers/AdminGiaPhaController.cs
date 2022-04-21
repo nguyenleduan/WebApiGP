@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Service.Service.AdminGenealogys;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,20 +12,22 @@ namespace WebApiGP.Controllers
 {
     public class AdminGiaPhaController : Controller
     {
-        [HttpGet("GetAdmin/{idGiaPha}")]
-        public IActionResult GetAdminGiaPha(long idGiaPha)
+
+        private IAdminGenealogyService _IAdminGenealogy; 
+
+        public AdminGiaPhaController(IAdminGenealogyService iAdminGenealogy)
+        {
+            _IAdminGenealogy = iAdminGenealogy;
+        }
+
+        [HttpGet("GetAllAdminFoGenealogy")]
+        public async Task<IActionResult> GetAllAdminFoGenealogy(long idGenealogy)
         {
             try
             {
-                using (var db = new MyDbContext())
-                {
-                    var gp = db.admin.FromSqlInterpolated($"EXECUTE [dbo].[getAdmin] @id={idGiaPha}").ToList();
-                    if (!gp.Any())
-                    {
-                        return Ok(Result.Failure("Data empty"));
-                    }
-                    return Ok(Result.Success(gp));
-                }
+                var result = await _IAdminGenealogy.GetAllAdminFoGenealogy(idGenealogy);
+
+                return Ok(Result.Success(result.Data));
             }
             catch (Exception ex)
             {
@@ -33,49 +36,39 @@ namespace WebApiGP.Controllers
         }
 
         [HttpPost("CreateAdmin")]
-        public IActionResult CreateAdmin([FromBody] AdminRequest request)
-        {
-
+        public async Task<IActionResult> CreateAdmin([FromBody] AdminRequest request)
+        { 
             try
             {
-                if(request.idGiaPha == null)
-                { 
-                    return Ok(Result.Failure("IdGiaPha not empty"));
-                }
-                Admin gp = new Admin();
-                gp.idGiaPha = (long)request.idGiaPha;
-                gp.phone = request.phone; 
-                using (var db = new MyDbContext())
+                if (request.idGiaPha == null)
                 {
-                    db.admin.Add(gp);
-                    db.SaveChanges();
+                    return Ok(Result.Failure("IdGenealogy not empty"));
                 }
+                var result = await _IAdminGenealogy.CreateAdminForFamily(request);
+                if (result)
+                {
+                    return Ok(Result.Success(1));
+                }
+                return Ok(Result.Failure("Create fail"));
 
             }
             catch (Exception ex)
             {
                 return Ok(Result.Failure(ex.ToString()));
             }
-
-            return Ok(Result.Success(1));
         }
-        [HttpDelete("DeleteIdAdmin/{id}")]
-        public IActionResult DeleteIdAdmin(long id)
+        [HttpDelete("DeleteIdAdmin/{idAdmin}")]
+        public async Task<IActionResult> DeleteIdAdmin(long idAdmin)
         {
 
             try
             {
-                using (var db = new MyDbContext())
+                var result = await _IAdminGenealogy.DeleteIdAdmin(idAdmin);
+                if (result)
                 {
-                    var gp = db.admin.FirstOrDefault(u => u.idAdmin == id);
-                    if (gp == null)
-                    {
-                        return Ok(Result.Failure("Client Not found"));
-                    }
-                    db.Entry(gp).State = EntityState.Deleted;
-                    db.SaveChanges();
                     return Ok(Result.Success(1));
                 }
+                return Ok(Result.Failure("Create fail")); 
             }
             catch (Exception ex)
             {

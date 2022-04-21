@@ -8,7 +8,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Models; 
+using Service.Service.AdminFamilys;
+using Service.Service.AdminGenealogys;
+using Service.Service.ClientDetails;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +33,12 @@ namespace WebApiGP
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddControllers(); 
+            services.AddControllers();
+
+            services.AddScoped<IAdminFamilyService, AdminFamilyService>(); 
+            services.AddScoped<IAdminGenealogyService,  AdminGenealogyService>(); 
+            services.AddScoped<IClientDetailService,  ClientDetailService>(); 
+        
             services.AddDbContext<MyDbContext>(option =>{
                 option.UseSqlServer(Configuration.GetConnectionString("GiaphaDb")); 
             });
